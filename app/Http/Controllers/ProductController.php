@@ -8,6 +8,8 @@ use App\Http\Resources\Product\ProductCollection;
 use App\Http\Requests\ProductRequest;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
+use App\Exceptions\NotOwnerOfProductException;
+use Auth;
 
 class ProductController extends Controller
 {
@@ -88,11 +90,15 @@ class ProductController extends Controller
     public function update(Request $request, Product $product)
     {
 
-        $request['detail'] = $request->description;
+        $this->checkProductOwner($product);
+
+        if($request->description){
+            $request['detail'] = $request->description;
+        }
 
         unset($request['description']);
 
-        $product->save($request->all());
+        $product->update($request->all());
 
         return response([
             'data' => new ProductResource($product)
@@ -107,7 +113,14 @@ class ProductController extends Controller
      */
     public function destroy(Product $product)
     {
+        $this->checkProductOwner($product);
         $product->delete();
         return response(null, Response::HTTP_NO_CONTENT);
+    }
+
+    public function checkProductOwner(Product $product){
+        if(Auth::id() != $product->user_id){
+            throw new NotOwnerOfProductException;
+        }
     }
 }
