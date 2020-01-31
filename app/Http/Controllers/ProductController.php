@@ -3,12 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Model\Product;
+use App\User;
 use App\Http\Resources\Product\ProductResource;
 use App\Http\Resources\Product\ProductCollection;
 use App\Http\Requests\ProductRequest;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
-use App\Exceptions\NotOwnerOfProductException;
+use App\Exceptions\UnauthorizedChangeException;
 use Auth;
 
 class ProductController extends Controller
@@ -45,14 +46,13 @@ class ProductController extends Controller
      */
     public function store(ProductRequest $request)
     {
-        return $request->all();
         $product = new Product;
         $product->name = $request->name;
         $product->detail = $request->description;
         $product->stock = $request->stock;
         $product->price = $request->price;
         $product->discount = $request->discount;
-        $product->save();
+        User::find(Auth::id())->products()->save($product);
         return response([
             'data' => new ProductResource($product)
         ], Response::HTTP_CREATED);
@@ -120,7 +120,7 @@ class ProductController extends Controller
 
     public function checkProductOwner(Product $product){
         if(Auth::id() != $product->user_id){
-            throw new NotOwnerOfProductException;
+            throw new UnauthorizedChangeException;
         }
     }
 }

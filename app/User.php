@@ -6,6 +6,8 @@ use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Laravel\Passport\HasApiTokens;
 use Illuminate\Notifications\Notifiable;
+use App\Model\Product;
+use App\Model\Review;
 
 class User extends Authenticatable
 {
@@ -37,4 +39,12 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
     ];
+
+    public function reviews(){
+        return $this->hasMany(Review::class);
+    }
+
+    public function products(){
+        return $this->hasMany(Product::class);
+    }
 }
